@@ -12,7 +12,7 @@ Fetch airtable-go:
 ```
 go get github.com/fabioberger/airtable-go
 ```
-Import Airtable-go into your project:
+Import airtable-go into your project:
 
 ```go
 import "github.com/fabioberger/airtable-go"
@@ -20,7 +20,7 @@ import "github.com/fabioberger/airtable-go"
 
 ### Usage
 
-Create an instance of the Airtable-go client:
+Create an instance of the airtable-go client:
 
 ```go
 import (
@@ -34,4 +34,4 @@ shouldRetryIfRateLimited := true
 
 client := airtable.New(airtableAPIKey, baseID, shouldRetryIfRateLimited)
 ```
-You can now call many methods on the client instance. These are documented in the <a href="https://godoc.org/github.com/fabioberger/airtable-go">Airtable-go GoDoc page</a>. In addition to this, check out the <a href="https://github.com/fabioberger/airtable-go/blob/master/client_test.go">stubbed tests</a> and <a href="https://github.com/fabioberger/airtable-go/blob/master/integration_tests/client_test.go">integration tests</a> included in this project, they contain working examples of all the client methods available.
+You can now call methods on the client instance. All client methods are documented in the project's <a href="https://godoc.org/github.com/fabioberger/airtable-go">GoDoc page</a>. You can also check out the <a href="https://github.com/fabioberger/airtable-go/blob/master/client_test.go">stubbed</a> and <a href="https://github.com/fabioberger/airtable-go/blob/master/integration_tests/client_test.go">integration</a> tests included in this project for working examples of all the client methods and options.
