@@ -3,7 +3,7 @@ package integrationTests
 import (
 	"testing"
 
-	. "github.com/fabioberger/airtable-go"
+	airtable "github.com/fabioberger/airtable-go"
 	"github.com/fabioberger/airtable-go/test_configs"
 	. "gopkg.in/check.v1"
 )
@@ -15,7 +15,7 @@ type ClientSuite struct{}
 var _ = Suite(&ClientSuite{})
 
 var shouldRetryIfRateLimited = true
-var client = New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
+var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
 
 var tasksTableName = "Tasks"
 
@@ -111,7 +111,7 @@ func (s *ClientSuite) TestListRecordsRequiringMultipleRequests(c *C) {
 
 func (s *ClientSuite) TestListRecordsInSpecificView(c *C) {
 	tasks := []task{}
-	listParameters := ListParameters{
+	listParameters := airtable.ListParameters{
 		View: "Tea Packaging Tasks",
 	}
 	err := client.ListRecords(tasksTableName, &tasks, listParameters)
@@ -121,7 +121,7 @@ func (s *ClientSuite) TestListRecordsInSpecificView(c *C) {
 
 func (s *ClientSuite) TestListRecordsUsingFilterByFormula(c *C) {
 	tasks := []task{}
-	listParameters := ListParameters{
+	listParameters := airtable.ListParameters{
 		FilterByFormula: "{Time Estimate (days)} > 2",
 	}
 	err := client.ListRecords(tasksTableName, &tasks, listParameters)
@@ -131,9 +131,9 @@ func (s *ClientSuite) TestListRecordsUsingFilterByFormula(c *C) {
 
 func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
 	tasks := []task{}
-	listParameters := ListParameters{
-		Sort: []*SortParameter{
-			NewSortParameter("Time Estimate (days)", "asc"),
+	listParameters := airtable.ListParameters{
+		Sort: []*airtable.SortParameter{
+			airtable.NewSortParameter("Time Estimate (days)", "asc"),
 		},
 	}
 	err := client.ListRecords(tasksTableName, &tasks, listParameters)
@@ -145,7 +145,7 @@ func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
 
 func (s *ClientSuite) TestListRecordsWithSpecifiedMaxRecords(c *C) {
 	tasks := []task{}
-	listParameters := ListParameters{
+	listParameters := airtable.ListParameters{
 		MaxRecords: 1,
 	}
 	err := client.ListRecords(tasksTableName, &tasks, listParameters)
@@ -155,7 +155,7 @@ func (s *ClientSuite) TestListRecordsWithSpecifiedMaxRecords(c *C) {
 
 func (s *ClientSuite) TestListRecordsWithSpecifiedFields(c *C) {
 	tasks := []task{}
-	listParameters := ListParameters{
+	listParameters := airtable.ListParameters{
 		Fields: []string{"Time Estimate (days)"},
 	}
 	err := client.ListRecords(tasksTableName, &tasks, listParameters)
