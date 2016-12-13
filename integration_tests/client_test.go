@@ -34,7 +34,8 @@ var teamMatesTableName = "Teammates"
 type teamMate struct {
 	AirtableID string `json:"id,omitempty"`
 	Fields     struct {
-		Name string
+		Name  string
+		Photo []airtable.Attachment
 	} `json:"fields"`
 }
 
@@ -52,11 +53,11 @@ func (s *ClientSuite) TearDownTest(c *C) {
 	client.RestoreAPIResponseStub()
 }
 
-func (s *ClientSuite) TestListRecords(c *C) {
-	tasks := []task{}
-	err := client.ListRecords(tasksTableName, &tasks)
+func (s *ClientSuite) TestListTeammateRecords(c *C) {
+	teamMates := []teamMate{}
+	err := client.ListRecords(teamMatesTableName, &teamMates)
 	c.Assert(err, Equals, nil)
-	c.Assert(len(tasks), Equals, 3)
+	c.Assert(len(teamMates), Equals, 9)
 }
 
 func (s *ClientSuite) TestRetrieveRecord(c *C) {

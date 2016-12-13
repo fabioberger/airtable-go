@@ -72,9 +72,17 @@ func (c *Client) listRecords(endpoint string, offsetHash string, tempRecordsHold
 	if err != nil {
 		return err
 	}
-	// Unmarshal into generic recordList struct
+
+	// Unmarshal into generic recordList struct. We need to use json.NewDecoder instead of json.Unmarshal
+	// in order to call "UseNumber()" which causes all numbers to unmarshal to json.Number, the original
+	// representation of the number. Without this, json.Unmarshal would convert all numbers to floating
+	// point values when unmarshalled into an interface{} type which doesn't specify the desired number
+	// format.
+	// Source: http://stackoverflow.com/questions/22343083/json-marshaling-with-long-numbers-in-golang-gives-floating-point-number
+	d := json.NewDecoder(strings.NewReader(string(rawBody)))
+	d.UseNumber()
 	rl := recordList{}
-	if err = json.Unmarshal(rawBody, &rl); err != nil {
+	if err = d.Decode(&rl); err != nil {
 		return err
 	}
 
@@ -384,4 +392,24 @@ func checkStatusCodeForError(statusCode int, rawBody []byte) error {
 		}
 	}
 	return nil
+}
+
+// Attachment models the response returned by the Airtable API for an attachment field type. It can be
+// used in your record type declarations that include attachment fields.
+type Attachment struct {
+	ID         string `json:"id"`
+	URL        string `json:"url"`
+	FileName   string `json:"filename"`
+	Size       int64  `json:"size"`
+	Type       string `json:"type"`
+	Thumbnails struct {
+		Small thumbnail `json:"small"`
+		Large thumbnail `json:"large"`
+	} `json:"thumbnails"`
+}
+
+type thumbnail struct {
+	URL    string `json:"url"`
+	Width  int64  `json:"width"`
+	Height int64  `json:"height"`
 }
