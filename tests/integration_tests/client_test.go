@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	airtable "github.com/fabioberger/airtable-go"
-	"github.com/fabioberger/airtable-go/test_configs"
+	"github.com/fabioberger/airtable-go/tests/test_base"
+	"github.com/fabioberger/airtable-go/tests/test_configs"
 	. "gopkg.in/check.v1"
 )
 
@@ -17,127 +18,99 @@ var _ = Suite(&ClientSuite{})
 var shouldRetryIfRateLimited = true
 var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
 
-var tasksTableName = "Tasks"
-
-type task struct {
-	AirtableID string `json:"id,omitempty"`
-	Fields     struct {
-		Name      string
-		Notes     string
-		Completed bool
-		TimeEst   float64 `json:"Time Estimate (days)"`
-	} `json:"fields"`
-}
-
-var teamMatesTableName = "Teammates"
-
-type teamMate struct {
-	AirtableID string `json:"id,omitempty"`
-	Fields     struct {
-		Name  string
-		Photo []airtable.Attachment
-	} `json:"fields"`
-}
-
-var LogTableName = "Log"
-
-type Log struct {
-	AirtableID string `json:"id,omitempty"`
-	Fields     struct {
-		AutoNumber int      `json:"Auto Number"`
-		Projects   []string `json:"Projects"`
-	}
-}
-
 func (s *ClientSuite) TearDownTest(c *C) {
 	client.RestoreAPIResponseStub()
 }
 
 func (s *ClientSuite) TestListTeammateRecords(c *C) {
-	teamMates := []teamMate{}
-	err := client.ListRecords(teamMatesTableName, &teamMates)
+	teamMates := []testBase.TeamMate{}
+	err := client.ListRecords(testBase.TeamMatesTableName, &teamMates)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(teamMates), Equals, 9)
 }
 
 func (s *ClientSuite) TestRetrieveRecord(c *C) {
-	tasks := []task{}
-	client.ListRecords(tasksTableName, &tasks)
+	tasks := []testBase.Task{}
+	client.ListRecords(testBase.TasksTableName, &tasks)
 	t := tasks[0]
 
-	aTask := task{}
-	client.RetrieveRecord(tasksTableName, t.AirtableID, &aTask)
+	aTask := testBase.Task{}
+	client.RetrieveRecord(testBase.TasksTableName, t.AirtableID, &aTask)
 	c.Assert(aTask.Fields.Name, Equals, t.Fields.Name)
 }
 
 func (s *ClientSuite) TestCreateAndDestroyRecord(c *C) {
-	tm := teamMate{}
+	tm := testBase.TeamMate{}
 	tm.Fields.Name = "Bob"
-	err := client.CreateRecord(teamMatesTableName, &tm)
+	err := client.CreateRecord(testBase.TeamMatesTableName, &tm)
 	c.Assert(err, Equals, nil)
 
-	err = client.DestroyRecord(teamMatesTableName, tm.AirtableID)
+	err = client.DestroyRecord(testBase.TeamMatesTableName, tm.AirtableID)
 	c.Assert(err, Equals, nil)
 }
 
 func (s *ClientSuite) TestUpdateRecord(c *C) {
-	tasks := []task{}
-	client.ListRecords(tasksTableName, &tasks)
+	tasks := []testBase.Task{}
+	listParams := airtable.ListParameters{
+		FilterByFormula: "{Name} = \"Design Tea Packaging\"",
+	}
+	client.ListRecords(testBase.TasksTableName, &tasks, listParams)
 	t := tasks[0]
 	oldName := t.Fields.Name
 
+	newName := "Redesign Tea Packaging"
 	updatedFields := map[string]interface{}{
-		"Name": "John Coltrain",
+		"Name": newName,
 	}
-	err := client.UpdateRecord(teamMatesTableName, t.AirtableID, updatedFields, &t)
+	err := client.UpdateRecord(testBase.TeamMatesTableName, t.AirtableID, updatedFields, &t)
 	c.Assert(err, Equals, nil)
-	c.Assert(t.Fields.Name, Equals, "John Coltrain")
+	c.Assert(t.Fields.Name, Equals, newName)
 	c.Assert(t.Fields.Name, Not(Equals), oldName)
 
 	// revert to old name
 	updatedFields = map[string]interface{}{
 		"Name": oldName,
 	}
-	err = client.UpdateRecord(teamMatesTableName, t.AirtableID, updatedFields, &t)
+	err = client.UpdateRecord(testBase.TeamMatesTableName, t.AirtableID, updatedFields, &t)
 	c.Assert(err, Equals, nil)
 }
 
 func (s *ClientSuite) TestListRecordsRequiringMultipleRequests(c *C) {
-	logs := []Log{}
-	if err := client.ListRecords(LogTableName, &logs); err != nil {
+	logs := []testBase.Log{}
+	if err := client.ListRecords(testBase.LogTableName, &logs); err != nil {
 		c.Error(err)
 	}
 	c.Assert(len(logs), Equals, 117)
 }
 
 func (s *ClientSuite) TestListRecordsInSpecificView(c *C) {
-	tasks := []task{}
+	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		View: "Tea Packaging Tasks",
 	}
-	err := client.ListRecords(tasksTableName, &tasks, listParameters)
+	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(tasks), Equals, 1)
 }
 
 func (s *ClientSuite) TestListRecordsUsingFilterByFormula(c *C) {
-	tasks := []task{}
+	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		FilterByFormula: "{Time Estimate (days)} > 2",
 	}
-	err := client.ListRecords(tasksTableName, &tasks, listParameters)
+	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(tasks), Equals, 2)
 }
 
 func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
-	tasks := []task{}
+	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		Sort: []*airtable.SortParameter{
 			airtable.NewSortParameter("Time Estimate (days)", "asc"),
 		},
 	}
-	err := client.ListRecords(tasksTableName, &tasks, listParameters)
+	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)
 	c.Assert(err, Equals, nil)
 	c.Assert(tasks[0].Fields.TimeEst, Equals, 1.5)
 	c.Assert(tasks[1].Fields.TimeEst, Equals, 2.5)
@@ -145,21 +118,21 @@ func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
 }
 
 func (s *ClientSuite) TestListRecordsWithSpecifiedMaxRecords(c *C) {
-	tasks := []task{}
+	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		MaxRecords: 1,
 	}
-	err := client.ListRecords(tasksTableName, &tasks, listParameters)
+	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(tasks), Equals, 1)
 }
 
 func (s *ClientSuite) TestListRecordsWithSpecifiedFields(c *C) {
-	tasks := []task{}
+	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		Fields: []string{"Time Estimate (days)"},
 	}
-	err := client.ListRecords(tasksTableName, &tasks, listParameters)
+	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)
 	c.Assert(err, Equals, nil)
 	for _, task := range tasks {
 		c.Assert(task.Fields.Name, Equals, "")
