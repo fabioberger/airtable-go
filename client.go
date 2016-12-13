@@ -16,15 +16,12 @@ import (
 )
 
 const majorAPIVersion = 0
+const retryDelayIfRateLimited = 5 * time.Second
+const RateLimitStatusCode = 429
 
 var apiBaseURL = fmt.Sprintf("https://api.airtable.com/v%d", majorAPIVersion)
 
-var fullAPIVersion = fmt.Sprintf("%d.1.0", majorAPIVersion)
-
-const retryDelayIfRateLimited = 5 * time.Second
-const rateLimitStatusCode = 429
-
-// Client lets you make requests to the Airtable API.
+// Client exposes the interface for sending requests to the Airtable API
 type Client struct {
 	apiKey                   string
 	baseID                   string
@@ -53,8 +50,8 @@ type recordList struct {
 
 // ListRecords returns a list of records from a given Airtable table. The caller can optionally pass in
 // a ListParameters struct as the last argument. If passed, it will be url encoded and sent with the request.
-// ListRecords will return all the records matching the ListParameters, making multiple requests to Airtable
-// if the number of matching records exceeds the 100 record limit of any one API request.
+// ListRecords will return all the records matching the supplied ListParameters, making multiple requests
+// to Airtable if the number of matching records exceeds the 100 record limit for any one API request.
 func (c *Client) ListRecords(tableName string, recordsHolder interface{}, listParams ...ListParameters) error {
 	endpoint := fmt.Sprintf("%s/%s/%s?", apiBaseURL, c.baseID, tableName)
 	if len(listParams) != 0 {
@@ -63,10 +60,10 @@ func (c *Client) ListRecords(tableName string, recordsHolder interface{}, listPa
 	}
 	tempRecordsHolder := reflect.New(reflect.TypeOf(recordsHolder).Elem()).Interface()
 	offsetHash := ""
-	return c.listRecords(endpoint, offsetHash, tempRecordsHolder, recordsHolder)
+	return c.recursivelyListRecordsAtOffset(endpoint, offsetHash, tempRecordsHolder, recordsHolder)
 }
 
-func (c *Client) listRecords(endpoint string, offsetHash string, tempRecordsHolder, finalRecordsHolder interface{}) error {
+func (c *Client) recursivelyListRecordsAtOffset(endpoint string, offsetHash string, tempRecordsHolder, finalRecordsHolder interface{}) error {
 	finalEndpoint := fmt.Sprintf("%s&offset=%s", endpoint, offsetHash)
 	rawBody, err := c.request("GET", finalEndpoint, nil)
 	if err != nil {
@@ -76,7 +73,7 @@ func (c *Client) listRecords(endpoint string, offsetHash string, tempRecordsHold
 	// Unmarshal into generic recordList struct. We need to use json.NewDecoder instead of json.Unmarshal
 	// in order to call "UseNumber()" which causes all numbers to unmarshal to json.Number, the original
 	// representation of the number. Without this, json.Unmarshal would convert all numbers to floating
-	// point values when unmarshalled into an interface{} type which doesn't specify the desired number
+	// point values when unmarshalling into an interface{} type since it doesn't specify the desired number
 	// format.
 	// Source: http://stackoverflow.com/questions/22343083/json-marshaling-with-long-numbers-in-golang-gives-floating-point-number
 	d := json.NewDecoder(strings.NewReader(string(rawBody)))
@@ -103,7 +100,7 @@ func (c *Client) listRecords(endpoint string, offsetHash string, tempRecordsHold
 	finalRecordsHolderVal.Set(reflect.AppendSlice(finalRecordsHolderVal, tempRecordsHolderVal))
 
 	if rl.Offset != "" {
-		return c.listRecords(endpoint, rl.Offset, tempRecordsHolder, finalRecordsHolder)
+		return c.recursivelyListRecordsAtOffset(endpoint, rl.Offset, tempRecordsHolder, finalRecordsHolder)
 	}
 	return nil
 }
@@ -123,7 +120,9 @@ func (c *Client) RetrieveRecord(tableName string, recordID string, recordHolder 
 	return nil
 }
 
-// CreateRecord creates a record in an Airtable table.
+// CreateRecord creates a new record in an Airtable table and updates the `record` struct with the created
+// records field values i.e fields with default values would be populated as well as AirtableID with the
+// record's id.
 func (c *Client) CreateRecord(tableName string, record interface{}) error {
 	endpoint := fmt.Sprintf("%s/%s/%s", apiBaseURL, c.baseID, tableName)
 	rawBody, err := c.request("POST", endpoint, record)
@@ -140,7 +139,8 @@ type updateBody struct {
 	Fields map[string]interface{} `json:"fields"`
 }
 
-// UpdateRecord updates a record in an Airtable table.
+// UpdateRecord updates an existing record in an Airtable table and updates the new field values in
+// the `record` struct passed in.
 func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[string]interface{}, record interface{}) error {
 	utils.AssertIsRecordID(recordID)
 
@@ -157,13 +157,12 @@ func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[stri
 	return nil
 }
 
-// DestroyRecord deletes a record in an Airtable table.
+// DestroyRecord deletes a record from an Airtable table by recordID
 func (c *Client) DestroyRecord(tableName, recordID string) error {
 	utils.AssertIsRecordID(recordID)
 
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", apiBaseURL, c.baseID, tableName, recordID)
-	_, err := c.request("DELETE", endpoint, nil)
-	if err != nil {
+	if _, err := c.request("DELETE", endpoint, nil); err != nil {
 		return err
 	}
 	return nil
@@ -180,6 +179,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 		return []byte{}, utils.SwitchCaseError("method", method)
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+	fullAPIVersion := fmt.Sprintf("%d.1.0", majorAPIVersion)
 	req.Header.Add("x-api-version", fullAPIVersion)
 	req.Header.Add("x-airtable-application-id", c.baseID)
 	rawBody, statusCode, err := c.fetcher.Fetch(req)
@@ -187,7 +187,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 		return []byte{}, err
 	}
 
-	if statusCode == rateLimitStatusCode && c.shouldRetryIfRateLimited {
+	if statusCode == RateLimitStatusCode && c.shouldRetryIfRateLimited {
 		time.Sleep(retryDelayIfRateLimited)
 		return c.request(method, endpoint, body)
 	}
@@ -240,7 +240,8 @@ func (c *Client) RestoreAPIResponseStub() {
 	c.fetcher = realHTTPFetcher{}
 }
 
-// ListParameters let's the caller describe the parameters he want's sent with a ListRecords request.
+// ListParameters let's the caller describe the parameters he want's sent with a ListRecords request
+// See the documentation at https://airtable.com/api for more information on how to use these parameters
 type ListParameters struct {
 	Fields          []string
 	FilterByFormula string
@@ -277,7 +278,7 @@ func (l *ListParameters) URLEncode() string {
 	return v.Encode()
 }
 
-// SortParameter is a sort object sent as part of the ListParameters that describes how to records
+// SortParameter is a sort object sent as part of the ListParameters that describes how the records
 // should be sorted.
 type SortParameter struct {
 	field     string
@@ -392,24 +393,4 @@ func checkStatusCodeForError(statusCode int, rawBody []byte) error {
 		}
 	}
 	return nil
-}
-
-// Attachment models the response returned by the Airtable API for an attachment field type. It can be
-// used in your record type declarations that include attachment fields.
-type Attachment struct {
-	ID         string `json:"id"`
-	URL        string `json:"url"`
-	FileName   string `json:"filename"`
-	Size       int64  `json:"size"`
-	Type       string `json:"type"`
-	Thumbnails struct {
-		Small thumbnail `json:"small"`
-		Large thumbnail `json:"large"`
-	} `json:"thumbnails"`
-}
-
-type thumbnail struct {
-	URL    string `json:"url"`
-	Width  int64  `json:"width"`
-	Height int64  `json:"height"`
 }

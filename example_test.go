@@ -17,6 +17,26 @@ func ExampleNew() {
 	fmt.Println(client)
 }
 
+func ExampleClient_CreateRecord() {
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+
+	type task struct {
+		AirtableID string
+		Fields     struct {
+			Name  string
+			Notes string
+		}
+	}
+
+	aTask := task{}
+	aTask.Fields.Name = "Contact suppliers"
+	aTask.Fields.Notes = "Get pricing on both the blue and green variants"
+
+	client.CreateRecord("TABLE_NAME", &aTask)
+
+	// aTask.AirtableID is now set to the newly created Airtable recordID
+}
+
 func ExampleClient_DestroyRecord() {
 	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
 
@@ -35,9 +55,9 @@ func ExampleClient_ListRecords() {
 			Notes string
 		}
 	}
+
 	tasks := []task{}
-	err := client.ListRecords("TABLE_NAME", &tasks)
-	if err != nil {
+	if err := client.ListRecords("TABLE_NAME", &tasks); err != nil {
 		panic(err)
 	}
 
@@ -54,9 +74,9 @@ func ExampleClient_RetrieveRecord() {
 			Notes string
 		}
 	}
+
 	retrievedTask := task{}
-	err := client.RetrieveRecord("TABLE_NAME", "RECORD_ID", &retrievedTask)
-	if err != nil {
+	if err := client.RetrieveRecord("TABLE_NAME", "RECORD_ID", &retrievedTask); err != nil {
 		panic(err)
 	}
 
@@ -73,21 +93,15 @@ func ExampleClient_UpdateRecord() {
 			Notes string
 		}
 	}
-	aTask := task{
-		AirtableID: "RECORD_ID",
-		Fields: struct {
-			Name  string
-			Notes string
-		}{
-			Name:  "Clean kitchen",
-			Notes: "Make sure to clean all the counter tops",
-		},
-	}
+
+	aTask := task{}
+	aTask.Fields.Name = "Clean kitchen"
+	aTask.Fields.Notes = "Make sure to clean all the counter tops"
+
 	UpdatedFields := map[string]interface{}{
 		"Name": "Clean entire kitchen",
 	}
-	err := client.UpdateRecord("TABLE_NAME", "RECORD_ID", UpdatedFields, &aTask)
-	if err != nil {
+	if err := client.UpdateRecord("TABLE_NAME", "RECORD_ID", UpdatedFields, &aTask); err != nil {
 		panic(err)
 	}
 
@@ -97,6 +111,15 @@ func ExampleClient_UpdateRecord() {
 func ExampleListParameters() {
 	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
 
+	type task struct {
+		AirtableID string
+		Fields     struct {
+			Name     string
+			Notes    string
+			Priority int
+		}
+	}
+
 	listParams := airtable.ListParameters{
 		Fields:          []string{"Name", "Notes", "Priority"},
 		FilterByFormula: "{Priority} < 2",
@@ -105,15 +128,6 @@ func ExampleListParameters() {
 			airtable.NewSortParameter("Priority", "desc"),
 		},
 		View: "Main View",
-	}
-
-	type task struct {
-		AirtableID string
-		Fields     struct {
-			Name     string
-			Notes    string
-			Priority int
-		}
 	}
 	tasks := []task{}
 	if err := client.ListRecords("TABLE_NAME", &tasks, listParams); err != nil {
