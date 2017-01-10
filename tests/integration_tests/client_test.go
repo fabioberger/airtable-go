@@ -18,10 +18,6 @@ var _ = Suite(&ClientSuite{})
 var shouldRetryIfRateLimited = true
 var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
 
-func (s *ClientSuite) TearDownTest(c *C) {
-	client.RestoreAPIResponseStub()
-}
-
 func (s *ClientSuite) TestListTeammateRecords(c *C) {
 	teamMates := []testBase.TeamMate{}
 	err := client.ListRecords(testBase.TeamMatesTableName, &teamMates)
