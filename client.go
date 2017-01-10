@@ -25,19 +25,19 @@ var apiBaseURL = fmt.Sprintf("https://api.airtable.com/v%d", majorAPIVersion)
 type Client struct {
 	apiKey                   string
 	baseID                   string
-	shouldRetryIfRateLimited bool
+	ShouldRetryIfRateLimited bool
 	HTTPClient               *http.Client
 }
 
 // New creates a new instance of the Airtable client.
-func New(apiKey, baseID string, shouldRetryIfRateLimited bool) *Client {
+func New(apiKey, baseID string) *Client {
 	utils.AssertIsAPIKey(apiKey)
 	utils.AssertIsBaseID(baseID)
 
 	c := Client{
 		apiKey: apiKey,
 		baseID: baseID,
-		shouldRetryIfRateLimited: shouldRetryIfRateLimited,
+		ShouldRetryIfRateLimited: true,
 		HTTPClient:               http.DefaultClient,
 	}
 	return &c
@@ -193,7 +193,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 		return []byte{}, err
 	}
 
-	if statusCode == RateLimitStatusCode && c.shouldRetryIfRateLimited {
+	if statusCode == RateLimitStatusCode && c.ShouldRetryIfRateLimited {
 		time.Sleep(retryDelayIfRateLimited)
 		return c.request(method, endpoint, body)
 	}
@@ -204,11 +204,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 }
 
 func (c *Client) requestWithoutBody(method, endpoint string) (*http.Request, error) {
-	req, err := http.NewRequest(method, endpoint, nil)
-	if err != nil {
-		return &http.Request{}, err
-	}
-	return req, nil
+	return http.NewRequest(method, endpoint, nil)
 }
 
 func (c *Client) requestWithBody(method string, endpoint string, body interface{}) (*http.Request, error) {

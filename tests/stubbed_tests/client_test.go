@@ -39,8 +39,7 @@ func (f fileRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
 	return httpResponse, nil
 }
 
-var shouldRetryIfRateLimited = true
-var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
+var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
 
 var fakeRecordID = "recSG8Ytl8KWpFAKE"
 

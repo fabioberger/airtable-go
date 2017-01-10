@@ -15,8 +15,7 @@ type ClientSuite struct{}
 
 var _ = Suite(&ClientSuite{})
 
-var shouldRetryIfRateLimited = true
-var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID, shouldRetryIfRateLimited)
+var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
 
 func (s *ClientSuite) TestListTeammateRecords(c *C) {
 	teamMates := []testBase.TeamMate{}

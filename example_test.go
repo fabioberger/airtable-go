@@ -10,9 +10,8 @@ import (
 func ExampleNew() {
 	airtableAPIKey := os.Getenv("AIRTABLE_API_KEY")
 	baseID := "apphllLCpWnySSF7q"
-	shouldRetryIfRateLimited := true
 
-	client := airtable.New(airtableAPIKey, baseID, shouldRetryIfRateLimited)
+	client := airtable.New(airtableAPIKey, baseID)
 
 	fmt.Println(client)
 }
