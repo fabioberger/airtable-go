@@ -26,7 +26,7 @@ type Client struct {
 	apiKey                   string
 	baseID                   string
 	shouldRetryIfRateLimited bool
-	fetcher                  httpFetcher
+	HTTPClient               *http.Client
 }
 
 // New creates a new instance of the Airtable client.
@@ -38,7 +38,7 @@ func New(apiKey, baseID string, shouldRetryIfRateLimited bool) *Client {
 		apiKey: apiKey,
 		baseID: baseID,
 		shouldRetryIfRateLimited: shouldRetryIfRateLimited,
-		fetcher:                  realHTTPFetcher{},
+		HTTPClient:               http.DefaultClient,
 	}
 	return &c
 }
@@ -182,7 +182,13 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 	fullAPIVersion := fmt.Sprintf("%d.1.0", majorAPIVersion)
 	req.Header.Add("x-api-version", fullAPIVersion)
 	req.Header.Add("x-airtable-application-id", c.baseID)
-	rawBody, statusCode, err := c.fetcher.Fetch(req)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+	statusCode := resp.StatusCode
+	rawBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
 	}
