@@ -220,26 +220,6 @@ func (c *Client) requestWithBody(method string, endpoint string, body interface{
 	return req, nil
 }
 
-// StubAPIResponseWithFileContentsOrPanic let's the user stub API responses with a specific statusCode and
-// rawResponse. All subsequent requests made with this client will return this response.
-// Since this method is only used in tests, it will panic if an error condition is hit, e.g if it's
-// unable to read the rawResponse from the supplied filePath
-func (c *Client) StubAPIResponseWithFileContentsOrPanic(statusCode int, filePath string) {
-	rawResponse, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-	c.fetcher = fakeHTTPFetcher{
-		statusCode:  statusCode,
-		rawResponse: rawResponse,
-	}
-}
-
-// RestoreAPIResponseStub restores the client's API response stub.
-func (c *Client) RestoreAPIResponseStub() {
-	c.fetcher = realHTTPFetcher{}
-}
-
 // ListParameters let's the caller describe the parameters he want's sent with a ListRecords request
 // See the documentation at https://airtable.com/api for more information on how to use these parameters
 type ListParameters struct {
