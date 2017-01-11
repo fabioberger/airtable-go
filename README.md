@@ -35,6 +35,8 @@ client := airtable.New(airtableAPIKey, baseID)
 ```
 You can now call methods on the client instance. All client methods are documented in the project's <a href="https://godoc.org/github.com/fabioberger/airtable-go">GoDoc page</a>. You can also check out the <a href="https://github.com/fabioberger/airtable-go/blob/master/tests/stubbed_tests/client_test.go">stubbed</a> and <a href="https://github.com/fabioberger/airtable-go/blob/master/tests/integration_tests/client_test.go">integration</a> tests included in this project for working examples of all the client methods and options.
 
+For Airtable specific documentation, see the interactive documentation at [https://airtable.com/api](https://airtable.com/api).
+
 ### Tests
 
 Execute the following to run the stubbed out unit tests:
