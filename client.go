@@ -171,7 +171,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 	var req *http.Request
 	switch {
 	case method == "GET" || method == "DELETE":
-		req, err = c.requestWithoutBody(method, endpoint)
+		req, err = http.NewRequest(method, endpoint, nil)
 	case method == "POST" || method == "PATCH":
 		req, err = c.requestWithBody(method, endpoint, body)
 	default:
@@ -200,10 +200,6 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 		return []byte{}, err
 	}
 	return rawBody, nil
-}
-
-func (c *Client) requestWithoutBody(method, endpoint string) (*http.Request, error) {
-	return http.NewRequest(method, endpoint, nil)
 }
 
 func (c *Client) requestWithBody(method string, endpoint string, body interface{}) (*http.Request, error) {
