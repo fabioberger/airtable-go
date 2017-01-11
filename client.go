@@ -21,7 +21,9 @@ const retryDelayIfRateLimited = 5 * time.Second
 
 var apiBaseURL = fmt.Sprintf("https://api.airtable.com/v%d", majorAPIVersion)
 
-// Client exposes the interface for sending requests to the Airtable API
+// Client exposes the interface for sending requests to the Airtable API. After instantiation, one
+// can further configure the client by setting the `ShouldRetryIfRateLimited` property which defaults
+// to true, or by setting `HTTPClient` to a custom *http.Client instance.
 type Client struct {
 	apiKey                   string
 	baseID                   string
@@ -29,7 +31,7 @@ type Client struct {
 	HTTPClient               *http.Client
 }
 
-// New creates a new instance of the Airtable client.
+// New creates a new instance of the Airtable client or returns an error if one is encountered.
 func New(apiKey, baseID string) (*Client, error) {
 	if !utils.IsValidAPIKey(apiKey) {
 		return nil, errors.New("invalid API Key encountered")
