@@ -57,3 +57,7 @@ Now you can run the integration tests with:
 ```
 go test -v ./tests/integration_tests
 ```
+
+### Versioning
+
+This library uses [Semantic Versioning](http://semver.org/).
