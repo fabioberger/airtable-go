@@ -17,7 +17,6 @@ import (
 
 const majorAPIVersion = 0
 const retryDelayIfRateLimited = 5 * time.Second
-const RateLimitStatusCode = 429
 
 var apiBaseURL = fmt.Sprintf("https://api.airtable.com/v%d", majorAPIVersion)
 
@@ -193,7 +192,7 @@ func (c *Client) request(method string, endpoint string, body interface{}) (rawB
 		return []byte{}, err
 	}
 
-	if statusCode == RateLimitStatusCode && c.ShouldRetryIfRateLimited {
+	if statusCode == http.StatusTooManyRequests && c.ShouldRetryIfRateLimited {
 		time.Sleep(retryDelayIfRateLimited)
 		return c.request(method, endpoint, body)
 	}

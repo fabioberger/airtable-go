@@ -106,7 +106,7 @@ func (s *ClientSuite) TestRetryLogicIfRateLimited(c *C) {
 		updatedFields := map[string]interface{}{
 			"Name": "Bill Bob",
 		}
-		client.HTTPClient = newFakeHTTPClient(airtable.RateLimitStatusCode, "../test_responses/update_teammate.json")
+		client.HTTPClient = newFakeHTTPClient(http.StatusTooManyRequests, "../test_responses/update_teammate.json")
 		err := client.UpdateRecord(testBase.TeamMatesTableName, fakeRecordID, updatedFields, nil)
 		c.Assert(err, Equals, nil)
 		channel <- true
