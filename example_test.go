@@ -11,7 +11,10 @@ func ExampleNew() {
 	airtableAPIKey := os.Getenv("AIRTABLE_API_KEY")
 	baseID := "apphllLCpWnySSF7q"
 
-	client, _ := airtable.New(airtableAPIKey, baseID)
+	client, err := airtable.New(airtableAPIKey, baseID)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println(client)
 }
