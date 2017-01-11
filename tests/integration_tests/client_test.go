@@ -102,7 +102,10 @@ func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
 	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
 		Sort: []airtable.SortParameter{
-			airtable.NewSortParameter("Time Estimate (days)", "asc"),
+			airtable.SortParameter{
+				Field:          "Time Estimate (days)",
+				ShouldSortDesc: false,
+			},
 		},
 	}
 	err := client.ListRecords(testBase.TasksTableName, &tasks, listParameters)

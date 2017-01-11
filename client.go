@@ -243,10 +243,12 @@ func (l *ListParameters) URLEncode() string {
 	}
 	if len(l.Sort) != 0 {
 		for i, sort := range l.Sort {
-			v.Add(fmt.Sprintf("sort[%d][field]", i), sort.field)
-			if sort.direction != "" {
-				v.Add(fmt.Sprintf("sort[%d][direction]", i), sort.direction)
+			v.Add(fmt.Sprintf("sort[%d][field]", i), sort.Field)
+			direction := "asc"
+			if sort.ShouldSortDesc {
+				direction = "desc"
 			}
+			v.Add(fmt.Sprintf("sort[%d][direction]", i), direction)
 		}
 	}
 	if l.View != "" {
@@ -258,20 +260,8 @@ func (l *ListParameters) URLEncode() string {
 // SortParameter is a sort object sent as part of the ListParameters that describes how the records
 // should be sorted.
 type SortParameter struct {
-	field     string
-	direction string
-}
-
-// NewSortParameter creates a new SortParameter. Field is the name of the Airtable field you want to
-// sort by and direction must either be "asc" or "desc".
-func NewSortParameter(field, direction string) SortParameter {
-	lowercaseDir := strings.ToLower(direction)
-	utils.Assert(lowercaseDir == "asc" || lowercaseDir == "desc", "direction must either be \"asc\" or \"desc\"")
-	sp := SortParameter{
-		field:     field,
-		direction: lowercaseDir,
-	}
-	return sp
+	Field          string
+	ShouldSortDesc bool
 }
 
 // Error represents an error returned by the Airtable API.

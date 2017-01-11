@@ -123,8 +123,11 @@ func ExampleListParameters() {
 		Fields:          []string{"Name", "Notes", "Priority"},
 		FilterByFormula: "{Priority} < 2",
 		MaxRecords:      50,
-		Sort: []*airtable.SortParameter{
-			airtable.NewSortParameter("Priority", "desc"),
+		Sort: []airtable.SortParameter{
+			airtable.SortParameter{
+				Field:          "Priority",
+				ShouldSortDesc: true,
+			},
 		},
 		View: "Main View",
 	}
