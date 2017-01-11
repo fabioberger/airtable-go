@@ -101,7 +101,7 @@ func (s *ClientSuite) TestListRecordsUsingFilterByFormula(c *C) {
 func (s *ClientSuite) TestListRecordsWithASortedOrder(c *C) {
 	tasks := []testBase.Task{}
 	listParameters := airtable.ListParameters{
-		Sort: []*airtable.SortParameter{
+		Sort: []airtable.SortParameter{
 			airtable.NewSortParameter("Time Estimate (days)", "asc"),
 		},
 	}

@@ -227,7 +227,7 @@ type ListParameters struct {
 	Fields          []string
 	FilterByFormula string
 	MaxRecords      int
-	Sort            []*SortParameter
+	Sort            []SortParameter
 	View            string
 }
 
@@ -268,14 +268,14 @@ type SortParameter struct {
 
 // NewSortParameter creates a new SortParameter. Field is the name of the Airtable field you want to
 // sort by and direction must either be "asc" or "desc".
-func NewSortParameter(field, direction string) *SortParameter {
+func NewSortParameter(field, direction string) SortParameter {
 	lowercaseDir := strings.ToLower(direction)
 	utils.Assert(lowercaseDir == "asc" || lowercaseDir == "desc", "direction must either be \"asc\" or \"desc\"")
 	sp := SortParameter{
 		field:     field,
 		direction: lowercaseDir,
 	}
-	return &sp
+	return sp
 }
 
 // Error represents an error returned by the Airtable API.
