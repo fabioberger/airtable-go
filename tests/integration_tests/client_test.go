@@ -15,7 +15,15 @@ type ClientSuite struct{}
 
 var _ = Suite(&ClientSuite{})
 
-var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
+var client *airtable.Client
+
+func (s *ClientSuite) SetUpSuite(c *C) {
+	var err error
+	client, err = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
+	if err != nil {
+		c.Error(err)
+	}
+}
 
 func (s *ClientSuite) TestListTeammateRecords(c *C) {
 	teamMates := []testBase.TeamMate{}

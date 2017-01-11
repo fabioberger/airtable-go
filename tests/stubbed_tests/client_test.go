@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fabioberger/airtable-go"
+	airtable "github.com/fabioberger/airtable-go"
 	"github.com/fabioberger/airtable-go/tests/test_base"
 	"github.com/fabioberger/airtable-go/tests/test_configs"
 	. "gopkg.in/check.v1"
@@ -39,7 +39,15 @@ func (f fileRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
 	return httpResponse, nil
 }
 
-var client = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
+var client *airtable.Client
+
+func (s *ClientSuite) SetUpSuite(c *C) {
+	var err error
+	client, err = airtable.New(testConfigs.AirtableTestAPIKey, testConfigs.AirtableTestBaseID)
+	if err != nil {
+		c.Error(err)
+	}
+}
 
 var fakeRecordID = "recSG8Ytl8KWpFAKE"
 

@@ -3,6 +3,7 @@ package airtable
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -29,9 +30,13 @@ type Client struct {
 }
 
 // New creates a new instance of the Airtable client.
-func New(apiKey, baseID string) *Client {
-	utils.AssertIsAPIKey(apiKey)
-	utils.AssertIsBaseID(baseID)
+func New(apiKey, baseID string) (*Client, error) {
+	if !utils.IsValidAPIKey(apiKey) {
+		return nil, errors.New("invalid API Key encountered")
+	}
+	if !utils.IsValidBaseID(baseID) {
+		return nil, errors.New("invalid base ID encountered")
+	}
 
 	c := Client{
 		apiKey: apiKey,
@@ -39,7 +44,7 @@ func New(apiKey, baseID string) *Client {
 		ShouldRetryIfRateLimited: true,
 		HTTPClient:               http.DefaultClient,
 	}
-	return &c
+	return &c, nil
 }
 
 type recordList struct {
@@ -106,7 +111,9 @@ func (c *Client) recursivelyListRecordsAtOffset(endpoint string, offsetHash stri
 
 // RetrieveRecord returns a single record from a given Airtable table.
 func (c *Client) RetrieveRecord(tableName string, recordID string, recordHolder interface{}) error {
-	utils.AssertIsRecordID(recordID)
+	if err := utils.CheckForValidRecordID(recordID); err != nil {
+		return err
+	}
 
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", apiBaseURL, c.baseID, tableName, recordID)
 	rawBody, err := c.request("GET", endpoint, nil)
@@ -141,7 +148,9 @@ type updateBody struct {
 // UpdateRecord updates an existing record in an Airtable table and updates the new field values in
 // the `record` struct passed in.
 func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[string]interface{}, record interface{}) error {
-	utils.AssertIsRecordID(recordID)
+	if err := utils.CheckForValidRecordID(recordID); err != nil {
+		return err
+	}
 
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", apiBaseURL, c.baseID, tableName, recordID)
 	body := updateBody{}
@@ -158,7 +167,9 @@ func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[stri
 
 // DestroyRecord deletes a record from an Airtable table by recordID
 func (c *Client) DestroyRecord(tableName, recordID string) error {
-	utils.AssertIsRecordID(recordID)
+	if err := utils.CheckForValidRecordID(recordID); err != nil {
+		return err
+	}
 
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", apiBaseURL, c.baseID, tableName, recordID)
 	if _, err := c.request("DELETE", endpoint, nil); err != nil {
