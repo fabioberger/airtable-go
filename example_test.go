@@ -17,7 +17,7 @@ func ExampleNew() {
 }
 
 func ExampleClient_CreateRecord() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	type task struct {
 		AirtableID string
@@ -37,7 +37,7 @@ func ExampleClient_CreateRecord() {
 }
 
 func ExampleClient_DestroyRecord() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	if err := client.DestroyRecord("TABLE_NAME", "RECORD_ID"); err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func ExampleClient_DestroyRecord() {
 }
 
 func ExampleClient_ListRecords() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	type task struct {
 		AirtableID string
@@ -64,7 +64,7 @@ func ExampleClient_ListRecords() {
 }
 
 func ExampleClient_RetrieveRecord() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	type task struct {
 		AirtableID string
@@ -83,7 +83,7 @@ func ExampleClient_RetrieveRecord() {
 }
 
 func ExampleClient_UpdateRecord() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	type task struct {
 		AirtableID string
@@ -108,7 +108,7 @@ func ExampleClient_UpdateRecord() {
 }
 
 func ExampleListParameters() {
-	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID", true)
+	client := airtable.New("AIRTABLE_API_KEY", "BASE_ID")
 
 	type task struct {
 		AirtableID string
