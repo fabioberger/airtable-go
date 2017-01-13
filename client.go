@@ -30,7 +30,7 @@ type Client struct {
 	HTTPClient               *http.Client
 }
 
-// New creates a new instance of the Airtable client or returns an error if one is encountered.
+// New creates a new instance of the Airtable client
 func New(apiKey, baseID string) (*Client, error) {
 	if !utils.IsValidAPIKey(apiKey) {
 		return nil, fmt.Errorf("invalid API Key encountered: %s", apiKey)
@@ -65,6 +65,10 @@ func (c *Client) ListRecords(tableName string, recordsHolder interface{}, listPa
 	}
 	tempRecordsHolder := reflect.New(reflect.TypeOf(recordsHolder).Elem()).Interface()
 	offsetHash := ""
+	// We pass tempRecordsHolder here as a perf optimization so that we do not need to re-derive
+	// the tempRecord for each request using reflection, but can instead reuse a single one. Since
+	// tempRecordsHolder is always a slice, it's contents will be entirely replaced with each
+	// subsequent unmarshalling.
 	return c.recursivelyListRecordsAtOffset(endpoint, offsetHash, tempRecordsHolder, recordsHolder)
 }
 
