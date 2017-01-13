@@ -3,7 +3,6 @@ package airtable
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -34,10 +33,10 @@ type Client struct {
 // New creates a new instance of the Airtable client or returns an error if one is encountered.
 func New(apiKey, baseID string) (*Client, error) {
 	if !utils.IsValidAPIKey(apiKey) {
-		return nil, errors.New("invalid API Key encountered")
+		return nil, fmt.Errorf("invalid API Key encountered: %s", apiKey)
 	}
 	if !utils.IsValidBaseID(baseID) {
-		return nil, errors.New("invalid base ID encountered")
+		return nil, fmt.Errorf("invalid base ID encountered: %s", baseID)
 	}
 
 	c := Client{
