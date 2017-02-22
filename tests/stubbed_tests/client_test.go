@@ -67,6 +67,12 @@ func (s *ClientSuite) TestListRecords(c *C) {
 	err := client.ListRecords(testBase.TasksTableName, &tasks)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(tasks), Equals, 3)
+
+	tasks2 := []testBase.Task{}
+	client.HTTPClient = newFakeHTTPClient(200, "../test_responses/list_tasks_2.json")
+	err = client.ListRecords(testBase.TasksTableName, &tasks2)
+	c.Assert(err, Equals, nil)
+	c.Assert(len(tasks2), Equals, 2)
 }
 
 func (s *ClientSuite) TestAirtableError(c *C) {
