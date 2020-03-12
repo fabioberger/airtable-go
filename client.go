@@ -17,6 +17,9 @@ import (
 
 const majorAPIVersion = 0
 const retryDelayIfRateLimited = 5 * time.Second
+const cellFormat = "string"
+const timeZone = "Europe/Paris"
+const userLocale = "fr"
 
 var apiBaseURL = fmt.Sprintf("https://api.airtable.com/v%d", majorAPIVersion)
 
@@ -270,6 +273,9 @@ func (l *ListParameters) URLEncode() string {
 	if l.View != "" {
 		v.Add("view", l.View)
 	}
+	v.Add("cellFormat", cellFormat)
+	v.Add("timeZone", timeZone)
+	v.Add("userLocale", userLocale)
 	return v.Encode()
 }
 
