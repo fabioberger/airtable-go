@@ -148,18 +148,24 @@ func (c *Client) CreateRecord(tableName string, record interface{}) error {
 
 type updateBody struct {
 	Fields map[string]interface{} `json:"fields"`
+	Typecast bool `json:"typecast",omitempty`
 }
 
 // UpdateRecord updates an existing record in an Airtable table and updates the new field values in
 // the `record` struct passed in.
-func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[string]interface{}, record interface{}) error {
+func (c *Client) UpdateRecord(tableName, recordID string, updatedFields map[string]interface{}, record interface{}, typecast bool) error {
 	if err := utils.CheckForValidRecordID(recordID); err != nil {
 		return err
+	}
+
+	if len(typecast) <= 0 {
+	  typecast = false
 	}
 
 	endpoint := fmt.Sprintf("%s/%s/%s/%s", apiBaseURL, c.baseID, tableName, recordID)
 	body := updateBody{}
 	body.Fields = updatedFields
+	body.Typecast = typecast
 	rawBody, err := c.request("PATCH", endpoint, body)
 	if err != nil {
 		return err
